@@ -10,13 +10,13 @@ import (
 )
 
 func choose(strs []string, f func(string) bool) []string {
-	result := make([]string, 0)
+	var r []string
 	for _, str := range strs {
 		if f(str) {
-			result = append(result, str)
+			r = append(r, str)
 		}
 	}
-	return result
+	return r
 }
 
 func contains(strs []string, str string) bool {
@@ -29,24 +29,24 @@ func contains(strs []string, str string) bool {
 }
 
 func uniq(strs []string) []string {
-	result := make([]string, 0)
+	var r []string
 	for _, str := range strs {
-		if !contains(result, str) {
-			result = append(result, str)
+		if !contains(r, str) {
+			r = append(r, str)
 		}
 	}
-	return result
+	return r
 }
 
-type ByLength []string
+type byLength []string
 
-func (s ByLength) Len() int {
+func (s byLength) Len() int {
 	return len(s)
 }
-func (s ByLength) Swap(i, j int) {
+func (s byLength) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s ByLength) Less(i, j int) bool {
+func (s byLength) Less(i, j int) bool {
 	return len(s[i]) < len(s[j])
 }
 
@@ -59,11 +59,11 @@ func unescape(str string) string {
 }
 
 func mapStrs(strs []string, f func(str string) string) []string {
-	result := make([]string, 0)
+	var r []string
 	for _, str := range strs {
-		result = append(result, f(str))
+		r = append(r, f(str))
 	}
-	return result
+	return r
 }
 
 type readable interface {
@@ -144,7 +144,7 @@ func args() []string {
 	args = choose(args, func(str string) bool { return len(str) > 2 })
 	args = append(args, mapStrs(args, unescape)...)
 	args = uniq(args)
-	sort.Sort(sort.Reverse(ByLength(args)))
+	sort.Sort(sort.Reverse(byLength(args)))
 	return args
 }
 
