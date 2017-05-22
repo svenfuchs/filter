@@ -45,13 +45,13 @@ func TestUniq(t *testing.T) {
 
 func TestByLength(t *testing.T) {
 	strs := []string{"aaaa", "a", "aa", "aaa"}
-	sort.Sort(ByLength(strs))
+	sort.Sort(byLength(strs))
 	assertEqual(t, strs, []string{"a", "aa", "aaa", "aaaa"})
 }
 
 func TestByReverseLength(t *testing.T) {
 	strs := []string{"aaaa", "a", "aa", "aaa"}
-	sort.Sort(sort.Reverse(ByLength(strs)))
+	sort.Sort(sort.Reverse(byLength(strs)))
 	assertEqual(t, strs, []string{"aaaa", "aaa", "aa", "a"})
 }
 
