@@ -4,7 +4,7 @@ use std::str;
 use std::process::Command;
 
 const MASK: &'static str = "[secure]";
-const MIN_LEN: usize = 1;
+const MIN_LEN: usize = 3;
 
 trait Reader {
     fn read(&mut self) -> Option<String>;
@@ -88,6 +88,7 @@ fn vars(keys: Vec<String>) -> Vec<String> {
     strs.sort_by_key(|s| s.len());
     strs.reverse();
 
+    // println!("strs: {}", strs.join("-"));
     return strs;
 }
 

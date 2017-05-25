@@ -101,9 +101,9 @@ func TestFilter(t *testing.T) {
 }
 
 func TestFiltered(t *testing.T) {
-	args := []string{"foo", "baz"}
+	strs := []string{"foo", "baz"}
 	in := bytes.NewBufferString("foo bar baz buz")
 	out := bytes.NewBufferString("")
-	filtered(in, out, args, "[.]").run()
+	filtered(in, out, strs, "[.]").run()
 	assertEqual(t, "[.] bar [.] buz", string(out.Bytes()))
 }

@@ -139,23 +139,28 @@ func (w writer) run() {
 	}
 }
 
-func args() []string {
-	args := os.Args[1:]
-	args = choose(args, func(str string) bool { return len(str) > 2 })
-	args = append(args, mapStrs(args, unescape)...)
-	args = uniq(args)
-	sort.Sort(sort.Reverse(byLength(args)))
-	return args
+func env(key string) string {
+  return os.Getenv(key)
 }
 
-func filtered(i io.Reader, o io.Writer, args []string, mask string) writer {
+func strs() []string {
+	strs := os.Args[1:]
+  strs = mapStrs(strs, env)
+	strs = choose(strs, func(str string) bool { return len(str) > 2 })
+	strs = append(strs, mapStrs(strs, unescape)...)
+	strs = uniq(strs)
+	sort.Sort(sort.Reverse(byLength(strs)))
+	return strs
+}
+
+func filtered(i io.Reader, o io.Writer, strs []string, mask string) writer {
 	in := readable(stdin{in: i})
-	for _, arg := range args {
-		in = filter{in: in, str: arg, mask: []byte(mask)}
+	for _, str := range strs {
+		in = filter{in: in, str: str, mask: []byte(mask)}
 	}
 	return writer{out: o, in: in}
 }
 
 func main() {
-	filtered(os.Stdin, os.Stdout, args(), "[secure]").run()
+	filtered(os.Stdin, os.Stdout, strs(), "[secure]").run()
 }

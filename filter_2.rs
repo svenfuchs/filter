@@ -131,45 +131,47 @@ impl<'a, R: Reader, W: io::Write> Runner<'a, R, W> where R: Reader, W: io::Write
 // }
 
 fn main() {
-    let mut input  = Stdin { input: &mut io::stdin() };
-    let mut filter = Filter { input: &mut input, string: "1".to_string(), buffer: "".to_string() };
-    let mut runner = Runner { input: &mut filter, output: &mut io::stdout() };
-    runner.run();
+    let &input: Reader = &Stdin { input: &mut io::stdin() };
+    input = &Filter { input: &mut input, string: "1".to_string(), buffer: "".to_string() };
+    // input = Filter { input: &mut input, string: "2".to_string(), buffer: "".to_string() };
+    // let mut runner = Runner { input: &mut input, output: &mut io::stdout() };
 
     // for s in strs() {
     //     input = Filter { input: &mut input, string: s.to_string(), buffer: "".to_string() };
     // }
 
-    // let filter = strs().iter().fold(stdin, |input, s| {
-    //     Filter { input: &mut input, string: s.to_string(), buffer: "".to_string() }
-    // });
-
-    // let runner = Runner { input: &mut input, output: &mut io::stdout() };
     // runner.run();
-
-    println!("\nDone.")
+    //
+    // // let filter = strs().iter().fold(stdin, |input, s| {
+    // //     Filter { input: &mut input, string: s.to_string(), buffer: "".to_string() }
+    // // });
+    //
+    // // let runner = Runner { input: &mut input, output: &mut io::stdout() };
+    // // runner.run();
+    //
+    // println!("\nDone.")
 }
 
-#[cfg(test)]
-mod tests {
-    // http://stackoverflow.com/questions/28370126/how-can-i-test-stdin-and-stdout
-    use Stdin;
-    use Filter;
-    use Runner;
-    use std::io::Cursor;
-
-    #[test]
-    fn test() {
-        let mut input  = Stdin  { input: &mut Cursor::new(&b"foo bar"[..]) };
-        let mut filter = Filter { input: &mut input, string: "foo".to_string(), buffer: "".to_string() };
-        let mut output = Cursor::new(Vec::new());
-        let mut runner = Runner { input: &mut filter, output: &mut output };
-
-        runner.run();
-
-        let out = &runner.output;
-        let s   = String::from_utf8(out.into_inner()).expect("Not UTF-8");
-
-        assert_eq!("Who goes there?", s);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     // http://stackoverflow.com/questions/28370126/how-can-i-test-stdin-and-stdout
+//     use Stdin;
+//     use Filter;
+//     use Runner;
+//     use std::io::Cursor;
+//
+//     #[test]
+//     fn test() {
+//         let mut input  = Stdin  { input: &mut Cursor::new(&b"foo bar"[..]) };
+//         let mut filter = Filter { input: &mut input, string: "foo".to_string(), buffer: "".to_string() };
+//         let mut output = Cursor::new(Vec::new());
+//         let mut runner = Runner { input: &mut filter, output: &mut output };
+//
+//         runner.run();
+//
+//         let out = &runner.output;
+//         let s   = String::from_utf8(out.into_inner()).expect("Not UTF-8");
+//
+//         assert_eq!("Who goes there?", s);
+//     }
+// }

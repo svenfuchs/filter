@@ -1,24 +1,41 @@
-def stdin(io)
-  -> { io.readchar unless io.eof? }
+class Stdin < Struct.new(:io)
+  def read
+    io.readchar unless io.eof?
+  end
 end
 
-def filter(reader, str, mask)
-  -> do
-    buffer = ''
-    while char = reader.call
+class Filter < Struct.new(:reader, :str, :mask)
+  def read
+    while char = reader.read
       buffer << char
       if str == buffer
         return mask
       elsif !str.start_with?(buffer)
-        return buffer
+        return flush
       end
     end
+  end
+
+  def mask
+    buffer.clear
+    super
+  end
+
+  def flush
+    str = buffer.dup
+    buffer.clear
+    return str
+  end
+
+  def buffer
+    @buffer ||= ''
   end
 end
 
 def write(reader, writer)
-  char = nil
-  writer.print(char) while char = reader.call
+  while char = reader.read
+    writer.print(char)
+  end
 end
 
 def unescape(str)
@@ -30,8 +47,7 @@ strs = strs.reject { |s| s.length < 3 }
 strs = strs.map { |s| [s, unescape(s)] }.flatten
 strs = strs.uniq.sort_by { |s| -s.length }
 
-reader = strs.inject(stdin($stdin)) do |reader, str|
-  filter(reader, str, '[.]')
+reader = strs.inject(Stdin.new($stdin)) do |reader, str|
+  Filter.new(reader, str, '[.]')
 end
-
 write(reader, $stdout)
