@@ -1,5 +1,5 @@
 use std::env;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::str;
 use std::process::Command;
 
@@ -68,24 +68,6 @@ impl Filter {
     }
 }
 
-struct Runner {
-    input:  Box<(Reader)>,
-    output: Box<io::Write>
-}
-
-impl Runner {
-    fn run(&mut self) {
-        while let Some(chars) = self.input.read() {
-            self.write(chars);
-        }
-    }
-
-    fn write(&mut self, chars: String) {
-        self.output.write(&chars.into_bytes()).unwrap();
-        self.output.flush().unwrap();
-    }
-}
-
 fn unescape(cmd: &String) -> String {
     let out = Command::new("echo").arg(cmd).output().unwrap().stdout;
     return str::from_utf8(&out).unwrap().trim_right().to_string()
@@ -95,10 +77,7 @@ fn var(key: &String) -> String {
     env::var(key).unwrap_or("".to_string())
 }
 
-fn strs() -> Vec<String> {
-    let mut keys: Vec<String> = env::args().collect();
-    keys.remove(0);
-
+fn vars(keys: Vec<String>) -> Vec<String> {
     let mut strs: Vec<String> = keys.iter().map(|s| var(s)).collect();
     let mut escd: Vec<String> = strs.iter().map(|s| unescape(s)).collect();
 
@@ -112,47 +91,49 @@ fn strs() -> Vec<String> {
     return strs;
 }
 
-fn filter(stdin: Box<io::Read>) -> Box<Reader> {
+fn filter(stdin: Box<io::Read>, args: Vec<String>) -> Box<Reader> {
     let stdin: Box<Reader> = Box::new(Stdin { input: stdin });
-    return strs().iter().fold(stdin, |input, arg| {
+    return vars(args).iter().fold(stdin, |input, arg| {
         Box::new(Filter { input: input, string: arg.to_string(), buffer: "".to_string() })
     });
 }
 
-fn runner(input: Box<io::Read>, output: Box<io::Write>) -> Runner {
-    return Runner { input: filter(input), output: output };
+fn run<'a>(input: Box<io::Read>, output: &'a mut io::Write, args: Vec<String>) {
+    let mut filter = filter(input, args);
+    while let Some(chars) = filter.read() {
+        output.write(&chars.into_bytes()).unwrap();
+        output.flush().unwrap();
+    }
+}
+
+fn args() -> Vec<String> {
+    let mut args: Vec<String> = env::args().collect();
+    args.remove(0);
+    return args;
 }
 
 fn main() {
-    let input  = Box::new(io::stdin());
-    let output = Box::new(io::stdout());
-
-    runner(input, output).run();
-
-    println!("\n\nDone.")
+    run(Box::new(io::stdin()), &mut io::stdout(), args());
 }
 
 #[cfg(test)]
 mod test {
-    // http://stackoverflow.com/questions/28370126/how-can-i-test-stdin-and-stdout
-    use std::io::{self, Cursor, Read, Write, Seek, SeekFrom};
-    use runner;
+    use run;
+    use std::io::Cursor;
+    use std::env;
 
     #[test]
     fn test_foo() {
-        let mut input  = Box::new(Cursor::new(&b"one two"[..]));
-        let mut cursor = Cursor::new(Vec::new());
-        let mut bx     = Box::new(cursor);
-        let mut runner = runner(input, bx);
+        env::set_var("a", "two");
+        let args = vec!["a".to_string()];
 
-        runner.run();
+        // http://stackoverflow.com/questions/28370126/how-can-i-test-stdin-and-stdout
+        let input = Box::new(Cursor::new(&b"one two three"[..]));
+        let mut output = Cursor::new(Vec::new());
 
-        let mut string = "".to_string();
-        // let mut cursor = unsafe { &*Box::into_raw(bx) };
-        // let mut cursor = Box::borrow(bx);
-        Cursor::seek(&mut cursor, SeekFrom::Start(0));
-        Cursor::read_to_string(&mut cursor, &mut string);
+        run(input, &mut output, args);
 
-        println!("{}", string);
+        let stdout = String::from_utf8(output.into_inner()).expect("Not UTF-8");
+        assert_eq!("one [secure] three", stdout);
     }
 }
